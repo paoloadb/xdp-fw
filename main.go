@@ -11,10 +11,10 @@ import (
 
 func main() {
 
-	// Specify Interface Name
+	// TODO: write a function to choose an interface from a list
 	interfaceName := "wlx000f0032c4b9"
 	// IP BlockList
-	// Add the IPs you want to be blocked
+	// TODO: write a function to read ip's from a file
 	ipList := []string{
 		"192.168.254.110",
 	}
