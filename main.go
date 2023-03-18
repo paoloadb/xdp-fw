@@ -25,15 +25,14 @@ func main() {
 		failExit("must provide filename")
 	}
 	// interfaceName := "wlx000f0032c4b9"
-	// IP BlockList
-
+	// reads ip's from blacklist.txt
 	ipList := getIps(*fName)
     fmt.Println("list of blacklisted ip's:")
 	for _, ips := range ipList {
 		fmt.Println(ips)
 	}
 
-	// Load XDP Into App
+	// Code To Load XDP Into App
 	bpf := goebpf.NewDefaultEbpfSystem()
 	err := bpf.LoadElf("bpf/xdp.elf")
 	if err != nil {
