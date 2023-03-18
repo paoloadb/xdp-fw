@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"flag"
+	"bufio"
 
 	"github.com/dropbox/goebpf"
 )
@@ -13,17 +14,23 @@ import (
 func main() {
 
 	iFace := flag.String("iface", "", "Your interface name")
+	fName := flag.String("fname", "blacklist.txt", "blacklist file name")
 	flag.Parse()
 
 	if *iFace == "" {
-		fmt.Println("Must specify interface name")
-		os.Exit(1)
+		failExit("Must specify interface name")
+	}
+
+	if *fName == "" {
+		failExit("must provide filename")
 	}
 	// interfaceName := "wlx000f0032c4b9"
 	// IP BlockList
-	// TODO: write a function to read ip's from a file
-	ipList := []string{
-		"192.168.254.110",
+
+	ipList := getIps(*fName)
+    fmt.Println("list of blacklisted ip's:")
+	for _, ips := range ipList {
+		fmt.Println(ips)
 	}
 
 	// Load XDP Into App
@@ -69,4 +76,28 @@ func BlockIPAddress(ipAddreses []string, blacklist goebpf.Map) error {
 		}
 	}
 	return nil
+}
+
+
+func failExit(reason string) {
+	fmt.Println(reason)
+	os.Exit(1)
+}
+
+func getIps(fName string) []string {
+	file, err := os.Open(fName)
+	if err != nil {
+		panic("file open error")
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	// scanner.Split(bufio.ScanLines)
+	var text []string 
+
+	for scanner.Scan() {
+		text = append(text, scanner.Text())
+	}
+
+return text
 }
