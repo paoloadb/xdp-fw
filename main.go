@@ -5,14 +5,21 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"flag"
 
 	"github.com/dropbox/goebpf"
 )
 
 func main() {
 
-	// TODO: write a function to choose an interface from a list
-	interfaceName := "wlx000f0032c4b9"
+	iFace := flag.String("iface", "", "Your interface name")
+	flag.Parse()
+
+	if *iFace == "" {
+		fmt.Println("Must specify interface name")
+		os.Exit(1)
+	}
+	// interfaceName := "wlx000f0032c4b9"
 	// IP BlockList
 	// TODO: write a function to read ip's from a file
 	ipList := []string{
@@ -37,7 +44,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("xdp.Attach(): %v", err)
 	}
-	err = xdp.Attach(interfaceName)
+	err = xdp.Attach(*iFace)
 	if err != nil {
 		log.Fatalf("Error attaching to Interface: %s", err)
 	}
