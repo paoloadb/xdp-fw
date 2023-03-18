@@ -1,6 +1,6 @@
 #include "bpf_helpers.h"
 
-
+// Build by typing: clang -I ../headers -O -target bpf -c xdp.c -o xdp.elf
 
 // Ethernet header
 struct ethhdr {
