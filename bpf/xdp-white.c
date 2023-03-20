@@ -26,13 +26,13 @@ struct iphdr {
 
 
 
-BPF_MAP_DEF(blacklist) = {
+BPF_MAP_DEF(list) = {
     .map_type = BPF_MAP_TYPE_LPM_TRIE,
     .key_size = sizeof(__u64),
     .value_size = sizeof(__u32),
     .max_entries = 16,
 };
-BPF_MAP_ADD(blacklist);
+BPF_MAP_ADD(list);
 
 // XDP program //
 SEC("xdp")
@@ -49,7 +49,7 @@ int firewall(struct xdp_md *ctx) {
 
   if (ether->h_proto != 0x08U) {  // htons(ETH_P_IP) -> 0x08U
     // Non IPv4 traffic
-    return XDP_PASS;
+    return XDP_DROP;
   }
 
   data += sizeof(*ether);
@@ -67,14 +67,14 @@ int firewall(struct xdp_md *ctx) {
   key.prefixlen = 32;
   key.saddr = ip->saddr;
 
-  // Lookup SRC IP in blacklisted IPs
-  __u64 *rule_idx = bpf_map_lookup_elem(&blacklist, &key);
+  // Lookup SRC IP in whitelisted IPs
+  __u64 *rule_idx = bpf_map_lookup_elem(&list, &key);
   if (rule_idx) {
     // Matched, increase match counter for matched "rule"
     __u32 index = *(__u32*)rule_idx;  // make verifier happy
-    return XDP_DROP;
+    return XDP_PASS;
   }
 
-  return XDP_PASS;
+  return XDP_DROP;
 }
 
