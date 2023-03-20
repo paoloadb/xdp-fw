@@ -14,33 +14,47 @@ import (
 func main() {
 
 	iFace := flag.String("iface", "", "Your interface name")
-	fName := flag.String("fname", "blacklist.txt", "blacklist file name")
+	fName := flag.String("fname", "", "file containing ip list")
+	fMode := flag.String("fmode", "", "blacklist or whitelist")
+	// interfaceName := "wlx000f0032c4b9"
 	flag.Parse()
 
 	if *iFace == "" {
 		failExit("Must specify interface name")
 	}
-
 	if *fName == "" {
 		failExit("must provide filename")
 	}
-	// interfaceName := "wlx000f0032c4b9"
-	// reads ip's from blacklist.txt
+
+	// check mode
+	var elfName string
+	if *fMode == "blacklist" {
+		fmt.Println("Blacklist mode...")
+		elfName = "bpf/xdp-black.elf"
+	}  
+	if *fMode == "whitelist" {
+		fmt.Println("Whitelist mode...")
+		elfName = "bpf/xdp-white.elf"
+	}
+
+	// reads ip's from ip-list.txt
 	ipList := getIps(*fName)
-    fmt.Println("list of blacklisted ip's:")
+    fmt.Println("list of ip's in file:")
 	for _, ips := range ipList {
 		fmt.Println(ips)
 	}
 
 	// Code To Load XDP Into App
 	bpf := goebpf.NewDefaultEbpfSystem()
-	err := bpf.LoadElf("bpf/xdp.elf")
+
+
+	err := bpf.LoadElf(elfName)
 	if err != nil {
 		log.Fatalf("LoadELF() failed: %s", err)
 	}
-	blacklist := bpf.GetMapByName("blacklist")
+	blacklist := bpf.GetMapByName("list")
 	if blacklist == nil {
-		log.Fatalf("eBPF map 'blacklist' not found\n")
+		log.Fatalf("eBPF map 'list' not found\n")
 	}
 	xdp := bpf.GetProgramByName("firewall")
 	if xdp == nil {
@@ -60,7 +74,7 @@ func main() {
 	defer xdp.Detach()
 	ctrlC := make(chan os.Signal, 1)
 	signal.Notify(ctrlC, os.Interrupt)
-	log.Println("XDP Program Loaded successfuly into the Kernel.")
+	log.Println("Program Loaded successfuly!")
 	log.Println("Press CTRL+C to stop.")
 	<-ctrlC
 
